@@ -3,6 +3,13 @@ import locale
 import sys
 import xml.dom.minidom
 
+itemFile = open('items.dat', 'w')
+categoryFile = open('category.dat', 'w')
+bidsFile = open('bids.dat', 'w')
+bidderFile = open('bidders.dat', 'w')
+sellerFile = open('sellers.dat', 'w')
+descriptionFile = open('descriptions.dat', 'w')
+
 def transform_dollar(dollar_str):
     """
     Returns the amount (in XXXXX.xx format) denoted by a money-string
@@ -18,7 +25,7 @@ def transform_dttm(dttm_str):
     dt = datetime.datetime.strptime(dttm_str, "%b-%d-%y %H:%M:%S")  
     return dt.isoformat(' ')
 
-def process_file(filename, fileDat):
+def process_file(filename):
     """
     Process one items-???.xml file.
     """
@@ -30,13 +37,26 @@ def process_file(filename, fileDat):
 
     for item in itemList:
         listList = []
+        itemList = []
+        cateList = []
+        bidList = []
+        bidderList = []
+        sellerList = []
+        descriptionList = []
+
         itemId = item.getAttribute('ItemID')
-        listList.append("{}<>".format(itemId))
+
+        itemList.append("{}<>".format(itemId))
+        cateList.append("{}<>".format(itemId))
+        bidList.append("{}<>".format(itemId))
+        bidderList.append("{}<>".format(itemId))
+        sellerList.append("{}<>".format(itemId))
+        descriptionList.append("{}<>".format(itemId))
         
         nList = item.getElementsByTagName('Name')
         for names in nList:
             name = names.childNodes[0].nodeValue
-            listList.append("{}<>".format(name))
+            itemList.append("{}<>".format(name))
         
         catList = item.getElementsByTagName('Category')
         for categoryItem in catList:
@@ -47,16 +67,16 @@ def process_file(filename, fileDat):
         for prices in currPrice:
             price = prices.childNodes[0].nodeValue
             price = transform_dollar(price)
-            listList.append("{}<>".format(price))
+            itemList.append("{}<>".format(price))
         
         buyPrices = item.getElementsByTagName("Buy_Price")
         if (buyPrices):
             for buy in buyPrices:
                buyPrice = buy.childNodes[0].nodeValue
-               listList.append("{}<>".format(buyPrice))
+               itemList.append("{}<>".format(buyPrice))
         else:
             buyPrice = "Null"
-            listList.append("{}<>".format(buyPrice))
+            itemList.append("{}<>".format(buyPrice))
 
         bids = item.getElementsByTagName("Bid")
         if(bids):
@@ -122,24 +142,24 @@ def process_file(filename, fileDat):
         locales = item.getElementsByTagName("Location")
         for locale in locales:
             location = locale.childNodes[0].nodeValue
-            listList.append("{}<>".format(location))
+            itemList.append("{}<>".format(location))
         
         countries = item.getElementsByTagName("Country")
         for country in countries:
             countryLoc = country.childNodes[0].nodeValue
-            listList.append("{}<>".format(countryLoc))
+            itemList.append("{}<>".format(countryLoc))
 
         timeStart = item.getElementsByTagName("Started")
         for starts in timeStart:
             start = starts.childNodes[0].nodeValue
             start = transform_dttm(start)
-            listList.append("{}<>".format(start))
+            itemList.append("{}<>".format(start))
 
         timeEnd = item.getElementsByTagName("Ends")
         for ends in timeEnd:
             end = ends.childNodes[0].nodeValue
             end = transform_dttm(end)
-            listList.append("{}<>".format(end))
+            itemList.append("{}".format(end))
 
         sellers = item.getElementsByTagName("Seller")
         for seller in sellers:
@@ -152,12 +172,23 @@ def process_file(filename, fileDat):
         for desc in descriptions:
             if(desc.hasChildNodes()):
                 description = desc.childNodes[0].nodeValue
-                listList.append("{}<>".format(description))
+                descriptionList.append("{}".format(description))
             else:
                 description = "Null"
-                listList.append("{}<>".format(description))
+                descriptionList.append("{}".format(description))
 
-        write_to_file(listList, fileDat)
+        write_to_file(itemList, itemFile)
+        write_to_file(cateList, categoryFile)
+        write_to_file(bidList, bidsFile)
+        write_to_file(bidderList, bidderFile)
+        write_to_file(sellerList, sellerFile)
+        write_to_file(descriptionList, descriptionFile)
+        del itemList
+        del catList
+        del bidList
+        del bidderList
+        del sellerList
+        del descriptionList
         del listList
 
 def write_to_file(itemList, fileDat):
@@ -171,12 +202,15 @@ def main():
 
     locale.setlocale(locale.LC_ALL, 'en_US.UTF8')
 
-    fileDat = open('EbayData.dat', 'w')
-
     for filename in sys.argv[1:]:
-        process_file(filename, fileDat)
+        process_file(filename)
 
-    fileDat.close()
+    itemFile.close()
+    categoryFile.close()
+    bidsFile.close()
+    bidderFile.close()
+    sellerFile.close()
+    descriptionFile.close()
 
 if __name__ == "__main__":
     main()
